@@ -1,0 +1,29 @@
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform' version '2.0.21'
+}
+
+def sdk = providers.environmentVariable('ANDROID_HOME')
+        .orElse(providers.environmentVariable('ANDROID_SDK_ROOT'))
+        .orElse(providers.provider {
+            def properties = new Properties()
+            def local = rootProject.file('local.properties')
+            if (local.isFile()) local.withInputStream { properties.load(it) }
+            properties.getProperty('sdk.dir')
+        })
+
+kotlin {
+    jvm()
+    sourceSets {
+        commonMain {
+            languageSettings.optIn('kotlin.js.ExperimentalJsExport')
+        }
+        jvmMain {
+            dependencies {
+                compileOnly files("${sdk.get()}/platforms/android-36.1/android.jar")
+                implementation 'li.songe:json5:0.0.1'
+                implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3'
+                implementation 'net.objecthunter:exp4j:0.4.8'
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "coloros-lockscreen-pictorial",
+  "version": 1,
+  "brand": "OnePlus",
+  "model": "PKR110",
+  "build": "PKR110_16.0.10.500(CN01)",
+  "namespace": "system",
+  "key": "pictorial_enable",
+  "target": "0",
+  "title": "乐划锁屏",
+  "enabled": false
+}

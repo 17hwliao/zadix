@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "fixture-close-ad",
+      "packageName": "com.ahuamiao.adprotection.fixture",
+      "minVersionCode": 1,
+      "maxVersionCode": 1,
+      "activityName": "com.ahuamiao.adprotection.fixture.FixtureActivity",
+      "adMarkerId": "com.ahuamiao.adprotection.fixture:id/ad_marker",
+      "closeViewId": "com.ahuamiao.adprotection.fixture:id/ad_close",
+      "blockedViewIds": ["com.ahuamiao.adprotection.fixture:id/sensitive_marker"],
+      "action": "clickNode"
+    },
+    {
+      "id": "netdisk-startup-native",
+      "packageName": "com.baidu.netdisk",
+      "minVersionCode": 4262,
+      "maxVersionCode": 4262,
+      "activityName": "com.baidu.netdisk.ui.MainActivity",
+      "adMarkerId": "com.baidu.netdisk:id/full_mark",
+      "closeViewId": "com.baidu.netdisk:id/countdown",
+      "blockedViewIds": ["com.baidu.netdisk:id/dialog_cancel"],
+      "action": "clickNode"
+    },
+    {
+      "id": "netdisk-startup-render",
+      "packageName": "com.baidu.netdisk",
+      "minVersionCode": 4262,
+      "maxVersionCode": 4262,
+      "activityName": "com.baidu.netdisk.ui.MainActivity",
+      "adMarkerId": "com.baidu.netdisk:id/tv_dsp",
+      "closeViewId": "com.baidu.netdisk:id/tv_skip",
+      "blockedViewIds": ["com.baidu.netdisk:id/dialog_cancel"],
+      "action": "clickNode"
+    }
+  ]
+}

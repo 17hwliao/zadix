@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self' https://api.github.com; frame-src 'none'; base-uri 'none'; object-src 'none'">
+<title>Zadix</title>
+<link rel="stylesheet" href="style.css">
+<script src="rules.js" defer></script><script src="app.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <a class="brand" href="#overview"><span class="brand-mark" aria-hidden="true">Z</span><span>Zadix</span></a>
+    <nav aria-label="主要导航">
+      <a href="#overview"><i class="icon overview" aria-hidden="true"></i>概览</a>
+      <a href="#rules"><i class="icon rules" aria-hidden="true"></i>规则库</a>
+      <a href="#guide"><i class="icon guide" aria-hidden="true"></i>使用指南</a>
+      <a href="#settings"><i class="icon settings" aria-hidden="true"></i>设置</a>
+    </nav>
+    <div class="rail-foot"><span class="version"></span><span>Android</span></div>
+  </aside>
+  <main id="main">
+    <header class="top"><span class="top-label">Zadix / <span id="section-label">概览</span></span><span id="mode" hidden>本地验收</span></header>
+    <section class="page" id="overview">
+      <div class="page-head"><h1>实时防护</h1><p>管理开屏广告跳过和系统快捷入口。</p></div>
+      <div class="hero" id="hero">
+        <div class="rings" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><b></b></div>
+        <div class="hero-content">
+          <span id="live-chip" class="status-chip" role="status"><i></i><span id="live-chip-text">正在连接</span></span>
+          <h2 id="live-title">实时跳过</h2>
+          <p id="live-detail">正在读取服务状态。</p>
+          <button id="live-action" class="primary inverse" disabled>正在连接</button>
+        </div>
+      </div>
+      <div class="quick-grid">
+        <article class="card shortcut">
+          <i class="tile-icon icon settings" aria-hidden="true"></i>
+          <div><h2>下拉磁贴</h2><p>从系统控制中心开启或暂停实时跳过。</p></div>
+          <button class="quiet" data-act="tile">添加磁贴 <span aria-hidden="true">↗</span></button>
+        </article>
+        <article class="card shortcut">
+          <i class="tile-icon icon rules" aria-hidden="true"></i>
+          <div><h2>开屏规则</h2><p data-rules>正在读取规则库。</p></div>
+          <a class="quiet" href="#rules">管理规则 <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+      <section class="activity"><div><h2>最近动作</h2><p id="last-result">暂无动作记录</p></div></section>
+    </section>
+    <section class="page" id="rules" hidden>
+      <div class="page-head"><h1>规则库</h1><p>按广告类型管理本机应用。</p></div>
+      <section class="card panel category-panel" aria-label="广告分类">
+        <ul class="catalog-list">
+          <li><a href="#rules/opening"><span>开屏广告</span><span class="category-link-state">按应用控制 <b aria-hidden="true">›</b></span></a></li>
+          <li><a href="#rules/fullscreen"><span>全屏广告</span><span aria-hidden="true">›</span></a></li>
+          <li><a href="#rules/partial"><span>局部广告</span><span aria-hidden="true">›</span></a></li>
+          <li><a href="#rules/inline"><span>分段广告</span><span aria-hidden="true">›</span></a></li>
+          <li><a href="#rules/mixed"><span>综合广告</span><span aria-hidden="true">›</span></a></li>
+          <li><a href="#rules/other"><span>其他规则</span><span aria-hidden="true">›</span></a></li>
+        </ul>
+      </section>
+      <div class="quick-grid">
+        <section class="card panel"><h2>导入资料包</h2><p data-rules>正在读取规则库。</p><button class="primary" data-act="pick">选择 .zadixsource</button><button class="quiet" data-act="example" id="example" hidden>下载示例资料包</button></section>
+        <section class="card panel"><h2>打包分享</h2><p>资料包包含规则、启用状态及排除项。分享前，请确认接收方可以看到这些设置，且规则允许转发。</p><button class="secondary" data-act="share" disabled>分享资料包</button><button class="quiet" data-act="save" disabled>保存资料包</button></section>
+      </div>
+      <p id="rules-message" class="feedback" role="status"></p>
+    </section>
+    <section class="page" id="rule-category" hidden>
+      <div class="page-head">
+        <a class="quiet catalog-back" href="#rules">‹ 规则库</a>
+        <h1 id="category-title">本机应用</h1>
+        <p id="category-state"></p>
+      </div>
+      <section id="catalog-card" class="card panel category-panel" aria-label="本机应用" hidden>
+        <ul class="catalog-list" id="catalog-apps"></ul>
+      </section>
+      <p id="catalog-message" class="feedback" role="status"></p>
+      <button class="quiet" id="catalog-more" hidden>加载更多</button>
+    </section>
+    <section class="page" id="guide" hidden>
+      <div class="page-head"><h1>使用指南</h1><p>首次使用、规则导入与日常启停。</p></div>
+      <div class="card instructions">
+        <article><span class="step">1</span><div><h2>开启无障碍服务</h2><p>打开系统无障碍设置，在已下载的服务中选择「Zadix · 实时跳过」。按系统提示授权后返回 Zadix。</p><button class="primary" data-act="authorize">前往授权并开启</button></div></article>
+        <article><span class="step">2</span><div><h2>管理应用规则</h2><p>在规则库选择广告类型，就能查看本机应用。导入 .zadixsource 可补充规则。</p><a class="quiet" href="#rules">打开规则库 ↗</a></div></article>
+        <article><span class="step">3</span><div><h2>把开关放到控制中心</h2><p>添加「实时跳过」磁贴后，可以从控制中心暂停或恢复。划掉界面任务后服务可继续运行，系统强行停止后请重新检查授权和状态。</p><button class="quiet" data-act="tile">添加磁贴 ↗</button></div></article>
+      </div>
+    </section>
+    <section class="page" id="settings" hidden>
+      <div class="page-head"><h1>设置</h1><p>查看授权、版本与系统工具。</p></div>
+      <section class="card panel settings-panel">
+        <div class="setting-row"><div><h2>无障碍授权</h2><p id="grant-state">正在读取</p></div><button class="secondary" data-act="settings">打开系统设置 ↗</button></div>
+        <div class="setting-row"><div><h2>当前版本</h2><p class="version"></p></div><button class="secondary" data-act="update">检查更新</button></div>
+        <p id="update-message" class="feedback" role="status">更新来源为 Zadix 的 GitHub Releases。</p>
+        <div class="setting-row"><div><h2>发布记录</h2><p>17hwliao / zadix</p></div><button class="quiet" data-act="releases">打开 GitHub ↗</button></div>
+        <div class="setting-row"><div><h2>系统清理</h2><p>查看设备设置与恢复记录。</p></div><button class="quiet" data-act="cleanup">打开工具 ↗</button></div>
+      </section>
+      <section class="card panel about-panel" aria-labelledby="about-title">
+        <h2 id="about-title">关于 Zadix</h2>
+        <p>通过 Android 无障碍识别并跳过符合规则的开屏广告。规则和应用开关保存在本机，可手动导入或分享资料包。</p>
+      </section>
+    </section>
+    <div id="notice" role="status" class="notice" hidden></div>
+  </main>
+</div>
+<input type="file" id="files" accept=".zadixsource" hidden>
+<dialog id="guide-dialog" aria-labelledby="dialog-title">
+  <form method="dialog" class="dialog-form"><button aria-label="关闭" class="close" value="close">×</button></form>
+  <h2 id="dialog-title">开启实时跳过</h2><p id="dialog-copy"></p>
+  <div class="dialog-actions"><button id="dialog-confirm" class="primary">继续</button></div>
+</dialog>
+</body></html>

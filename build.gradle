@@ -1,0 +1,126 @@
+plugins {
+    id 'com.android.application' version '8.13.0'
+}
+
+def zadixRelease = new groovy.json.JsonSlurper().parse(file('src/main/assets/zadix/release.json'))
+
+def timingBuild = providers.gradleProperty('adkillerTiming').map { it.toBoolean() }.orElse(false).get()
+def qqShortWait = providers.gradleProperty('adkillerQq400').map { it.toBoolean() }.orElse(false).get()
+def qqBatchRead = providers.gradleProperty('adkillerQqBatchRead').map { it.toBoolean() }.orElse(false).get()
+def qqInitialBatchRead = providers.gradleProperty('adkillerQqInitialBatchRead').map { it.toBoolean() }.orElse(false).get()
+def qqShortTap = providers.gradleProperty('adkillerQqShortTap').map { it.toBoolean() }.orElse(false).get()
+def qqDecisionTrace = providers.gradleProperty('adkillerQqDecisionTrace').map { it.toBoolean() }.orElse(false).get()
+def qqDirectWake = providers.gradleProperty('adkillerQqDirectWake').map { it.toBoolean() }.orElse(false).get()
+def treeTrace = providers.gradleProperty('adkillerTreeTrace').map { it.toBoolean() }.orElse(false).get()
+if (qqShortWait && !timingBuild) {
+    throw new GradleException('adkillerQq400 requires adkillerTiming for the local comparison')
+}
+if (qqBatchRead && (!timingBuild || qqShortWait)) {
+    throw new GradleException('adkillerQqBatchRead requires adkillerTiming and the standard QQ wait')
+}
+if (qqInitialBatchRead && !qqBatchRead) {
+    throw new GradleException('adkillerQqInitialBatchRead requires adkillerQqBatchRead')
+}
+if (qqShortTap && !qqInitialBatchRead) {
+    throw new GradleException('adkillerQqShortTap requires adkillerQqInitialBatchRead')
+}
+if (qqDecisionTrace && (!qqInitialBatchRead || qqShortTap)) {
+    throw new GradleException('adkillerQqDecisionTrace requires the build 14 timing and gesture settings')
+}
+if (qqDirectWake && !qqDecisionTrace) {
+    throw new GradleException('adkillerQqDirectWake requires adkillerQqDecisionTrace')
+}
+if (treeTrace && (!qqDecisionTrace || qqDirectWake)) {
+    throw new GradleException('adkillerTreeTrace requires the build 14 read and gesture settings')
+}
+
+android {
+    namespace 'com.ahuamiao.adprotection'
+    compileSdk {
+        version = release(36) {
+            minorApiLevel = 1
+        }
+    }
+    buildToolsVersion '36.1.0'
+
+    defaultConfig {
+        applicationId 'com.ahuamiao.adprotection'
+        minSdk 34
+        targetSdk 36
+        if (treeTrace) {
+            versionCode = 18
+            versionName = '0.2.3-tree-trace'
+        } else if (qqDirectWake) {
+            versionCode = 17
+            versionName = '0.2.3-qq-direct-wake'
+        } else if (qqDecisionTrace) {
+            versionCode = 16
+            versionName = '0.2.3-qq-decision-trace'
+        } else if (qqShortTap) {
+            versionCode = 15
+            versionName = '0.2.3-qq-short-tap'
+        } else if (qqInitialBatchRead) {
+            versionCode = 14
+            versionName = '0.2.3-qq-initial-batch'
+        } else if (qqBatchRead) {
+            versionCode = 13
+            versionName = '0.2.3-qq-batch'
+        } else {
+            versionCode = qqShortWait ? 11 : (timingBuild ? 10 : zadixRelease.build)
+            versionName = qqShortWait ? '0.2.3-qq400' : (timingBuild ? '0.2.2-timing' : zadixRelease.version)
+        }
+        buildConfigField 'String', 'RELEASE_REPOSITORY', '"' + zadixRelease.repository + '"'
+        buildConfigField 'boolean', 'LOCAL_TIMING', 'false'
+        buildConfigField 'boolean', 'QQ_SHORT_WAIT', 'false'
+        buildConfigField 'boolean', 'QQ_BATCH_READ', 'false'
+        buildConfigField 'boolean', 'QQ_INITIAL_BATCH_READ', 'false'
+        buildConfigField 'boolean', 'QQ_SHORT_TAP', 'false'
+        buildConfigField 'boolean', 'QQ_DIRECT_WAKE_RECHECK', 'false'
+        buildConfigField 'boolean', 'LOCAL_TREE_TIMING', 'false'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        debug {
+            if (timingBuild) {
+                buildConfigField 'boolean', 'LOCAL_TIMING', 'true'
+            }
+            if (qqShortWait) {
+                buildConfigField 'boolean', 'QQ_SHORT_WAIT', 'true'
+            }
+            if (qqBatchRead) {
+                buildConfigField 'boolean', 'QQ_BATCH_READ', 'true'
+            }
+            if (qqInitialBatchRead) {
+                buildConfigField 'boolean', 'QQ_INITIAL_BATCH_READ', 'true'
+            }
+            if (qqShortTap) {
+                buildConfigField 'boolean', 'QQ_SHORT_TAP', 'true'
+            }
+            if (qqDirectWake) {
+                buildConfigField 'boolean', 'QQ_DIRECT_WAKE_RECHECK', 'true'
+            }
+            if (treeTrace) {
+                buildConfigField 'boolean', 'LOCAL_TREE_TIMING', 'true'
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation project(':source-engine')
+    // The same Apache-2.0 option and transport used by the upstream phone client.
+    implementation 'com.github.MuntashirAkon:libadb-android:3.1.1'
+    implementation 'com.github.MuntashirAkon:sun-security-android:1.1'
+    implementation 'org.conscrypt:conscrypt-android:2.5.3'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+}

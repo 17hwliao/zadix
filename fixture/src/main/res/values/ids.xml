@@ -1,0 +1,11 @@
+<resources>
+    <item type="id" name="ad_marker" />
+    <item type="id" name="ad_close" />
+    <item type="id" name="sensitive_marker" />
+    <item type="id" name="action_count" />
+    <item type="id" name="result_auto" />
+    <item type="id" name="result_manual" />
+    <item type="id" name="result_natural" />
+    <item type="id" name="result_unexpected" />
+    <item type="id" name="result_switch" />
+</resources>
