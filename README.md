@@ -2,9 +2,9 @@
 
 Zadix 是一个 Android 开屏广告跳过工具。它通过用户授权的无障碍服务识别广告和跳过控件。你可以给单个应用关闭开屏拦截，也可以用下拉磁贴暂停所有实时动作。
 
-[下载维护版 APK](https://github.com/17hwliao/zadix/releases/download/v1.0.0/Zadix-1.0.2-maintenance.apk) · [发布说明](https://github.com/17hwliao/zadix/releases/tag/v1.0.0) · [规则包格式](source-engine/README.md)
+[下载 v1.0.0 APK](https://github.com/17hwliao/zadix/releases/download/v1.0.0/Zadix-1.0.0-build27.apk) · [发布说明](https://github.com/17hwliao/zadix/releases/tag/v1.0.0) · [规则包格式](source-engine/README.md)
 
-当前推荐安装 1.0.2（Build 26）维护包。它修复了 ColorOS 的启动闪退和开屏规则列表为空的问题。维护包放在原发布页，现有用户可下载 APK 覆盖安装。
+当前版本为 v1.0.0（Build 27）。APK 使用正式发行签名，已安装旧正式包的用户可以直接覆盖安装。后续在同一发布页更新时，Zadix 会根据 APK 构建号识别更新。
 
 ## 开始使用
 
@@ -20,7 +20,7 @@ Zadix 是一个 Android 开屏广告跳过工具。它通过用户授权的无�
 - 设置中的系统清理目前仅提供候选项的只读检查。
 - 1.0.0 使用正式发行证书。旧的调试签名 APK 无法直接覆盖升级。卸载旧调试版前，可先导出其中的规则包。
 
-维护包已在一加 Ace 5 Pro 的 ColorOS 16 上验证启动、完整资料包导入及升级保留、按应用开关、磁贴短按启停和长按。百度网盘实测记录到动作提交，广告是否确实关闭及底部成功提示仍待确认。
+百度网盘的确认提示依赖应用版本及页面结构。广告消失、正常页面稳定显示后才会记录已确认关闭，缺少这些证据时仅记录动作提交结果。
 
 ## 本地开发
 

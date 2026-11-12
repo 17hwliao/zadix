@@ -232,6 +232,16 @@ function ruleAction(action){
 }
 const stable=value=>typeof value==='string'&&/^v?\d{1,6}\.\d{1,6}\.\d{1,6}$/.test(value)?value.replace(/^v/,'').split('.').map(Number):null;
 function compare(a,b){for(let i=0;i<3;i++)if(a[i]!==b[i])return a[i]-b[i];return 0;}
+function publishedBuild(release){
+  const version=release.tag_name.replace(/^v/,'');
+  let latest=0;
+  for(const asset of Array.isArray(release.assets)?release.assets:[]){
+    if(!asset||asset.state!=='uploaded'||typeof asset.name!=='string')continue;
+    const match=/^Zadix-([0-9.]+)-build([1-9][0-9]{0,9})\.apk$/.exec(asset.name);
+    if(match&&match[1]===version&&Number(match[2])<=2100000000)latest=Math.max(latest,Number(match[2]));
+  }
+  return latest;
+}
 function updateResult(releases,error){
   updatePending=false;syncButtons();releaseTag=undefined;
   if(error||!Array.isArray(releases)){feedback('update-message',error||'更新来源返回了无法识别的数据。',true);return;}
@@ -241,10 +251,17 @@ function updateResult(releases,error){
   if(!latest){feedback('update-message','目前没有已发布的正式版本。');return;}
   const installed=stable(currentVersion);
   if(!installed){feedback('update-message','当前版本暂不可用，请稍后重试。',true);return;}
-  if(compare(stable(latest.tag_name),installed)<=0){feedback('update-message','当前已是最新版本。');return;}
+  const build=publishedBuild(latest);
+  const installedBuild=Number(currentBuild);
+  const versionOrder=compare(stable(latest.tag_name),installed);
+  const canCompareBuild=build>0&&Number.isInteger(installedBuild)&&installedBuild>0;
+  const newer=canCompareBuild?build>installedBuild:versionOrder>0&&build===0;
+  const unknown=!canCompareBuild&&!newer;
+  if(!newer&&!unknown){feedback('update-message','当前已是最新版本。');return;}
   releaseTag=latest.tag_name;
-  feedback('update-message','发现新版本 '+latest.tag_name+'。');
-  const link=document.createElement('button');link.type='button';link.className='quiet';link.textContent='查看新版本 ↗';link.addEventListener('click',openReleases);
+  const label=latest.tag_name+(build?' · Build '+build:'');
+  feedback('update-message',newer?'发现更新 '+label+'。':'已找到 '+label+' 的发布记录，暂无法比较构建号。');
+  const link=document.createElement('button');link.type='button';link.className='quiet';link.textContent='查看发布 ↗';link.addEventListener('click',openReleases);
   byId('update-message').append(' ',link);
 }
 function checkUpdate(){

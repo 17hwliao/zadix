@@ -9,6 +9,7 @@ final class NetdiskSplash {
     static final String MAIN = PACKAGE + ".ui.MainActivity";
     static final String RULE = "netdisk-startup-brand";
     static final String AD_CONTAINER = PACKAGE + ":id/fl_ad_container";
+    static final List<String> AD_MARKER_IDS = List.of(PACKAGE + ":id/full_mark", PACKAGE + ":id/tv_dsp");
     static final String BLOCKED_VIEW = PACKAGE + ":id/dialog_cancel";
     static final int SUPPORTED_VERSION = 4262;
     private static final Pattern SKIP = Pattern.compile("跳过(?:\\h*[0-9]{1,2}(?:\\h*秒)?)?");

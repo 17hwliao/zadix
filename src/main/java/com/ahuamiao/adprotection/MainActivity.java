@@ -421,7 +421,15 @@ public final class MainActivity extends Activity {
                         var release = releases.getJSONObject(i);
                         String tag = release.optString("tag_name");
                         if (tag.matches(TAG) && !release.optBoolean("prerelease") && !release.optBoolean("draft")) {
-                            tags.put(json("tag_name", tag));
+                            var assets = new JSONArray();
+                            var published = release.optJSONArray("assets");
+                            for (int j = 0; published != null && j < published.length(); j++) {
+                                var asset = published.optJSONObject(j);
+                                if (asset != null && "uploaded".equals(asset.optString("state"))) {
+                                    assets.put(json("name", asset.optString("name"), "state", "uploaded"));
+                                }
+                            }
+                            tags.put(json("tag_name", tag, "assets", assets));
                         }
                     }
                     result = json("type", "update", "releases", tags);

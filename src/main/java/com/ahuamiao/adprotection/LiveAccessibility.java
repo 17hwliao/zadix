@@ -612,6 +612,11 @@ public final class LiveAccessibility extends AccessibilityService {
         for (var node : root.findAccessibilityNodeInfosByViewId(NetdiskSplash.AD_CONTAINER)) {
             if (visibleIn(window, node) && node.getChildCount() > 0) return true;
         }
+        for (var id : NetdiskSplash.AD_MARKER_IDS) {
+            if (root.findAccessibilityNodeInfosByViewId(id).stream().anyMatch(node -> visibleIn(window, node))) {
+                return true;
+            }
+        }
         if (visibleText(window, root, "品牌广告")) return true;
         return root.findAccessibilityNodeInfosByText("跳过").stream()
                 .anyMatch(node -> visibleIn(window, node)
