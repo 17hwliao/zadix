@@ -261,8 +261,8 @@ public final class LiveAccessibility extends AccessibilityService {
         try {
             var pm = getPackageManager();
             var info = pm.getPackageInfo(pkg, 0);
-            if (info.applicationInfo == null) return null;
-            boolean system = (info.applicationInfo.flags
+            var application = info.applicationInfo == null ? pm.getApplicationInfo(pkg, 0) : info.applicationInfo;
+            boolean system = (application.flags
                     & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
             var home = pm.resolveActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
                     PackageManager.MATCH_DEFAULT_ONLY);

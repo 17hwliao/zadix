@@ -74,14 +74,14 @@ public final class MainActivity extends Activity {
         frame.setOnApplyWindowInsetsListener((view, insets) -> {
             var bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            var controller = view.getWindowInsetsController();
+            if (controller != null) {
+                int appearance = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                controller.setSystemBarsAppearance(appearance, appearance);
+            }
             return insets;
         });
-        var controller = getWindow().getInsetsController();
-        if (controller != null) {
-            int appearance = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                    | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-            controller.setSystemBarsAppearance(appearance, appearance);
-        }
         web = new WebView(this);
         web.setBackgroundColor(0xfff3f4f1);
         var settings = web.getSettings();

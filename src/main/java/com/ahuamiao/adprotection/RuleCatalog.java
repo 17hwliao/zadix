@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import li.songe.zadixsource.data.AppInfo;
@@ -45,20 +47,22 @@ final class RuleCatalog {
         boolean opening = OPENING.equals(category);
         String home = opening ? homePackage() : "";
         var matches = new ArrayList<Row>();
-        for (PackageInfo info : packages.getInstalledPackages(0)) {
-            if (info.applicationInfo == null || info.packageName.equals(context.getPackageName())) continue;
+        for (PackageInfo info : visiblePackages(appCategories, category)) {
+            if (info.packageName.equals(context.getPackageName())) continue;
+            ApplicationInfo application = applicationInfo(info);
+            if (application == null) continue;
             boolean listed = appCategories.getOrDefault(info.packageName, Set.of()).contains(category);
             boolean available = false;
             if (opening) {
                 boolean builtInApp = builtIn.packages().contains(info.packageName)
                         || QqMiniAppSplash.PACKAGE.equals(info.packageName);
                 if (!listed && !builtInApp && profile == null) continue;
-                available = supports(info, profile, home);
+                available = supports(info, application, profile, home);
                 if (!listed && !builtInApp && !available) continue;
             } else if (!listed) {
                 continue;
             }
-            String label = info.applicationInfo.loadLabel(packages).toString().strip();
+            String label = application.loadLabel(packages).toString().strip();
             if (label.isEmpty()) label = info.packageName;
             if (label.length() > 120) label = label.substring(0, 120);
             matches.add(new Row(info.packageName, label, available, available && runtime.allowsOpening(info.packageName)));
@@ -81,10 +85,46 @@ final class RuleCatalog {
         return result;
     }
 
+    private Iterable<PackageInfo> visiblePackages(Map<String, Set<String>> appCategories, String category) {
+        var found = new LinkedHashMap<String, PackageInfo>();
+        for (PackageInfo info : packages.getInstalledPackages(0)) found.put(info.packageName, info);
+        var candidates = new LinkedHashSet<String>();
+        var launch = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+        for (var activity : packages.queryIntentActivities(launch, 0)) {
+            if (activity.activityInfo != null) candidates.add(activity.activityInfo.packageName);
+        }
+        appCategories.forEach((pkg, categories) -> {
+            if (categories.contains(category)) candidates.add(pkg);
+        });
+        if (OPENING.equals(category)) {
+            candidates.addAll(builtIn.packages());
+            candidates.add(QqMiniAppSplash.PACKAGE);
+        }
+        for (String pkg : candidates) {
+            if (found.containsKey(pkg) || pkg.length() > 255) continue;
+            try {
+                found.put(pkg, packages.getPackageInfo(pkg, 0));
+            } catch (PackageManager.NameNotFoundException notVisibleOrNotInstalled) {
+                // Keep only packages Android confirms are installed for this user.
+            }
+        }
+        return found.values();
+    }
+
+    private ApplicationInfo applicationInfo(PackageInfo info) {
+        if (info.applicationInfo != null) return info.applicationInfo;
+        try {
+            return packages.getApplicationInfo(info.packageName, 0);
+        } catch (PackageManager.NameNotFoundException notVisibleOrNotInstalled) {
+            return null;
+        }
+    }
+
     boolean supportsOpening(String pkg) {
         if (pkg == null || pkg.length() > 255 || pkg.equals(context.getPackageName())) return false;
         try {
-            return supports(packages.getPackageInfo(pkg, 0), profile(), homePackage());
+            var info = packages.getPackageInfo(pkg, 0);
+            return supports(info, applicationInfo(info), profile(), homePackage());
         } catch (PackageManager.NameNotFoundException missing) {
             return false;
         }
@@ -102,8 +142,7 @@ final class RuleCatalog {
         return home == null || home.activityInfo == null ? "" : home.activityInfo.packageName;
     }
 
-    private boolean supports(PackageInfo info, StartupProfile profile, String home) {
-        var application = info.applicationInfo;
+    private boolean supports(PackageInfo info, ApplicationInfo application, StartupProfile profile, String home) {
         if (application == null || !application.enabled) return false;
         String pkg = info.packageName;
         long version = info.getLongVersionCode();
