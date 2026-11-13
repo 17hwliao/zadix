@@ -1,4 +1,4 @@
 <resources>
     <string name="live_service_description">匹配广告样本、百度网盘开屏和指定 QQ 小程序开屏，点击规则确认的跳过控件。</string>
-    <string name="ad_closed_banner">zadix · 广告已关闭</string>
+    <string name="ad_closed_banner">Zadix</string>
 </resources>

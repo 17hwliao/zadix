@@ -114,6 +114,12 @@ final class LiveController {
         return allows(work) ? query.get() : null;
     }
 
+    // Result observation checks the current foreground window itself. A focus event can
+    // invalidate a pending click without ending observation of a click already submitted.
+    synchronized <T> T observeResult(Work submitted, Supplier<T> readForeground) {
+        return sameRun(submitted) ? readForeground.get() : null;
+    }
+
     synchronized boolean submit(Work work, BooleanSupplier action) {
         return allows(work) && action.getAsBoolean();
     }
@@ -129,8 +135,11 @@ final class LiveController {
     }
 
     private boolean allows(Work work) {
-        return running && work != null && work.connection() == connection
-                && work.generation() == generation && work.window() == window;
+        return sameRun(work) && work.window() == window;
+    }
+
+    private boolean sameRun(Work work) {
+        return running && work != null && work.connection() == connection && work.generation() == generation;
     }
 
     private void restart() {

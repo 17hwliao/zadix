@@ -75,6 +75,24 @@ public final class LiveControllerTest {
         assertEquals(1, clicks.get());
     }
 
+    @Test public void submittedResultCanBeReadAfterFocusRefreshButNotAcrossRuns() {
+        long connection = start();
+        var submitted = gate.work(connection);
+        assertTrue(gate.submit(submitted, () -> true));
+        gate.windowChanged(connection);
+        assertNull(gate.query(submitted, queries::incrementAndGet));
+        assertFalse(gate.submit(submitted, () -> clicks.incrementAndGet() > 0));
+        assertEquals(Integer.valueOf(1), gate.observeResult(submitted, queries::incrementAndGet));
+
+        gate.choose(false);
+        assertNull(gate.observeResult(submitted, queries::incrementAndGet));
+        gate.choose(true);
+        gate.acknowledge(gate.pending());
+        assertNull(gate.observeResult(submitted, queries::incrementAndGet));
+        assertEquals(1, queries.get());
+        assertEquals(0, clicks.get());
+    }
+
     @Test public void olderLaunchPlaceholderCannotDiscardFirstWindowAfterResume() {
         var app = "com.ahuamiao.adprotection.fixture";
         assertTrue(LiveController.staleStartingWindow(app, 14949, 894789786, app,

@@ -12,6 +12,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 final class SkipBanner {
+    private static final long DISPLAY_MS = 2_000;
     private final AccessibilityService service;
     private final Handler main;
     private final Runnable hide = this::dismiss;
@@ -29,11 +30,11 @@ final class SkipBanner {
         banner.setTextColor(Color.WHITE);
         banner.setTextSize(14);
         banner.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        banner.setPadding(dp(19), dp(10), dp(19), dp(10));
+        banner.setPadding(dp(19), dp(8), dp(19), dp(8));
         banner.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         var background = new GradientDrawable();
         background.setColor(0xff20261f);
-        background.setCornerRadius(dp(22));
+        background.setCornerRadius(dp(12));
         banner.setBackground(background);
         var params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
@@ -44,7 +45,7 @@ final class SkipBanner {
         try {
             manager().addView(banner, params);
             visible = banner;
-            main.postDelayed(hide, 1650);
+            main.postDelayed(hide, DISPLAY_MS);
         } catch (IllegalStateException | WindowManager.BadTokenException unavailable) {
             // A disconnect can invalidate the service window token between confirmation and display.
         }

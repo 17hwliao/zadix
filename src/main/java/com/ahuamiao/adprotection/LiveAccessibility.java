@@ -69,8 +69,6 @@ public final class LiveAccessibility extends AccessibilityService {
     private LiveTiming timing;
     private LiveTiming.Pass scheduledTiming;
     private boolean scheduledQqWake;
-    private Window submittedWindow;
-    private String submittedRule;
     private int netdiskWindow = -1;
     private long netdiskLaunch = -1;
     private long qqOpenedAt = -1;
@@ -114,8 +112,6 @@ public final class LiveAccessibility extends AccessibilityService {
         currentReportedAt = -1;
         clearNetdiskOpening();
         clearQqOpening();
-        submittedWindow = null;
-        submittedRule = null;
         cancelScan(Outcome.GATE_REJECTED);
         resetSource();
         cancelCloseCheck();
@@ -151,6 +147,8 @@ public final class LiveAccessibility extends AccessibilityService {
             // A cold launch can deliver the placeholder window after the real activity.
             if (previous != null && LiveController.staleStartingWindow(previous.packageName(), previous.id(),
                     currentReportedAt, pkg, activity, windowId, event.getEventTime())) return;
+            if (closeCheck != null && windowId >= 0 && windowId != closeCheck.window().id()
+                    && isActivity(pkg, activity)) cancelCloseCheck();
             runtime.gate.windowChanged(connection);
             cancelScan(Outcome.WINDOW_CHANGED);
             if (windowId >= 0 && windowId != netdiskWindow && NetdiskSplash.ownsWindow(pkg, activity)) {
@@ -186,6 +184,7 @@ public final class LiveAccessibility extends AccessibilityService {
             }
             if ((changes & AccessibilityEvent.WINDOWS_CHANGE_REMOVED) != 0 && event.getWindowId() >= 0) {
                 if (netdiskWindow == event.getWindowId()) clearNetdiskOpening();
+                if (closeCheck != null && closeCheck.window().id() == event.getWindowId()) cancelCloseCheck();
                 if (confirmedCloseWindow != null && confirmedCloseWindow.id() == event.getWindowId()) {
                     confirmedCloseWindow = null;
                 }
@@ -473,15 +472,6 @@ public final class LiveAccessibility extends AccessibilityService {
             // window releases a Netdisk claim, so a failed or delayed click cannot repeat.
             if (qq) qqAdSeenAt = -1;
             else if (!NetdiskSplash.PACKAGE.equals(window.packageName())) forgetInstance(instance(window));
-            if (window.equals(submittedWindow)) {
-                // This ID belongs only to the controlled fixture and records the action's provenance.
-                if (FIXTURE.equals(window.packageName()) && tree.nodes().stream()
-                        .anyMatch(node -> node.visible() && (FIXTURE + ":id/result_auto").equals(node.viewId()))) {
-                    reportClosed(window, submittedRule);
-                }
-                submittedWindow = null;
-                submittedRule = null;
-            }
             outcome(pass, Outcome.NO_AD_MATCH);
             return;
         }
@@ -558,10 +548,8 @@ public final class LiveAccessibility extends AccessibilityService {
                     : target.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             if (pass != null) pass.receipt(accepted);
             runtime.record(window.packageName(), verified.ruleId(), "规则命中");
-            if (accepted) {
-                submittedWindow = window;
-                submittedRule = verified.ruleId();
-                if (isNetdiskConfirmationWindow(window)) beginCloseCheck(window, verified.ruleId(), work);
+            if (accepted && (FIXTURE.equals(window.packageName()) || isNetdiskConfirmationWindow(window))) {
+                beginCloseCheck(window, verified.ruleId(), work);
             }
             runtime.record(window.packageName(), verified.ruleId(), accepted ? "已提交 · 结果未确认" : "点击未获接受");
             return accepted;
@@ -577,8 +565,10 @@ public final class LiveAccessibility extends AccessibilityService {
     private void beginCloseCheck(Window window, String rule, LiveController.Work work) {
         if (window.equals(confirmedCloseWindow) || (closeCheck != null && window.equals(closeCheck.window()))) return;
         cancelCloseCheck();
+        long observationMs = FIXTURE.equals(window.packageName())
+                ? ClosingEvidence.FIXTURE_OBSERVATION_MS : ClosingEvidence.OBSERVATION_MS;
         closeCheck = new CloseCheck(window, rule, work, StartupSourceStore.current(),
-                new ClosingEvidence(SystemClock.uptimeMillis()));
+                new ClosingEvidence(SystemClock.uptimeMillis(), observationMs));
         main.postDelayed(confirmClose, ClosingEvidence.INTERVAL_MS);
     }
 
@@ -592,15 +582,18 @@ public final class LiveAccessibility extends AccessibilityService {
             cancelCloseCheck();
             return;
         }
-        var observed = runtime.gate.query(check.work(), () -> {
+        Boolean confirmed = runtime.gate.observeResult(check.work(), () -> {
             var root = sourceRoot(window);
-            if (root == null) return null;
-            return new ClosingEvidence.Screen(visibleNetdiskAd(window, root),
+            if (FIXTURE.equals(window.packageName())) {
+                return root != null && visibleId(window, root, FIXTURE + ":id/result_auto");
+            }
+            var screen = root == null ? null : new ClosingEvidence.Screen(visibleNetdiskAd(window, root),
                     visibleText(window, root, "首页"), visibleText(window, root, "文件"));
+            return check.evidence().observe(screen, SystemClock.uptimeMillis());
         });
-        if (observed == null) {
+        if (confirmed == null) {
             cancelCloseCheck();
-        } else if (check.evidence().observe(observed, SystemClock.uptimeMillis())) {
+        } else if (confirmed) {
             cancelCloseCheck();
             reportClosed(window, check.rule());
         } else {
@@ -613,15 +606,17 @@ public final class LiveAccessibility extends AccessibilityService {
             if (visibleIn(window, node) && node.getChildCount() > 0) return true;
         }
         for (var id : NetdiskSplash.AD_MARKER_IDS) {
-            if (root.findAccessibilityNodeInfosByViewId(id).stream().anyMatch(node -> visibleIn(window, node))) {
-                return true;
-            }
+            if (visibleId(window, root, id)) return true;
         }
         if (visibleText(window, root, "品牌广告")) return true;
         return root.findAccessibilityNodeInfosByText("跳过").stream()
                 .anyMatch(node -> visibleIn(window, node)
                         && (NetdiskSplash.label(node.getText()) == NetdiskSplash.Label.SKIP
                         || NetdiskSplash.label(node.getContentDescription()) == NetdiskSplash.Label.SKIP));
+    }
+
+    private static boolean visibleId(Window window, AccessibilityNodeInfo root, String id) {
+        return root.findAccessibilityNodeInfosByViewId(id).stream().anyMatch(node -> visibleIn(window, node));
     }
 
     private static boolean visibleText(Window window, AccessibilityNodeInfo root, String expected) {
